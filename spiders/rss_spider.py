@@ -1,8 +1,7 @@
 from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request
-# from scrapy_kafka.spiders import ListeningKafkaSpider
-# from rss_crawler.items import RSSItem
+from rss_crawler.items import RSSItem
 # from scrapy.spiders import XMLFeedSpider
 from scrapy.selector import HtmlXPathSelector
 from scrapy.selector import XmlXPathSelector
@@ -30,11 +29,6 @@ class RSSSpider(BaseSpider):
         "https://mscaregiverdonna.wordpress.com/"
     ]
     
-#     _allowed_domain = {"jade-epilepsymynewlife.blogspot.ca" }
-#     start_urls = [
-#         "http://jade-epilepsymynewlife.blogspot.com/feeds/posts/default"
-#     ]
-    
     _gathered_fields = ('published_parsed' ,'title' ,  'link' ,'summary');
 
     
@@ -52,10 +46,8 @@ class RSSSpider(BaseSpider):
             try:
                 feed = feedparser.parse(
                     url_file_stream_or_string = response.body,
-                    #request_headers = response.request.headers,
-                    #response_headers = response.headers
+
                 )
-#                 author  =feed['author_detail']['href']
 
                 #seeing as we've requested the document, might as well save it
                 if feed.version:
@@ -71,12 +63,9 @@ class RSSSpider(BaseSpider):
                         for key in {'title', 'link', 'summary', 'published'} & entry.viewkeys():
                             entry_item[key] = entry[key]
                         soup = BeautifulSoup(entry['summary'], 'html.parser')
-#                         entry_item['user_id'] = author
                         entry_item['summary'] = soup.get_text(separator=u' ').replace(u'\xa0', u' ') 
                         entry_item['url'] = rssFeedItem['url']
                         yield entry_item
-                        #rssFeedItem['entries'].append(entry_item);
-                    #yield rssFeedItem
                 else:
                     self.log("{url} looked like a feed, but wasn't one".format(url=response.url), level=log.DEBUG)
             except xml.sax.SAXException:
@@ -88,16 +77,7 @@ class RSSSpider(BaseSpider):
                 document.iterlinks()
             )
         )
-#         theurls = ", ".join(str(e) for e in urls)
-#         log.msg("found urls: "+theurls, level=log.DEBUG) 
-        
-#         urls2 = set()
-#         sel = CSSSelector('link[type="application/rss+xml"],link[type="application/atom+xml"]  ')
-#         results = sel(document)
-#         match = results[0]
-#         urls2.add(match.get('href'))
-#         theurls2 = ", ".join(str(e) for e in urls2)
-#         log.msg("found urls: "+theurls2, level=log.DEBUG) 
+
         for url in urls:
             if urlparse(url).netloc.endswith(tuple(self._allowed_domain)):
                 yield Request(url)
